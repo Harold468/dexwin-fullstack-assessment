@@ -1,0 +1,53 @@
+# One command to run the whole app: `docker compose up`
+# Starts PostgreSQL, the Spring Boot backend, and the React frontend together.
+# Source is bind-mounted into the backend/frontend containers for live editing.
+services:
+  db:
+    image: postgres:16
+    container_name: taskflow-db
+    environment:
+      POSTGRES_DB: taskflow
+      POSTGRES_USER: taskflow
+      POSTGRES_PASSWORD: taskflow
+    # Not published to the host — the backend reaches it over the Compose network
+    # as "db:5432", so this won't conflict with any Postgres already on your machine.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taskflow -d taskflow"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - taskflow-data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/taskflow
+      SPRING_DATASOURCE_USERNAME: taskflow
+      SPRING_DATASOURCE_PASSWORD: taskflow
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend:/app          # live source; recompile via `docker compose restart backend`
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    environment:
+      CHOKIDAR_USEPOLLING: "true"   # reliable file-change detection on Docker bind mounts
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app         # live source; Vite hot-reloads automatically
+      - /app/node_modules       # keep the container's node_modules, not the host's
+    depends_on:
+      - backend
+
+volumes:
+  taskflow-data:

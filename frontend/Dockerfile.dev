@@ -1,0 +1,15 @@
+# Dev image for the React (Vite) frontend.
+# Source is bind-mounted at runtime; node_modules lives in a container volume
+# (see docker-compose.yml) so the host doesn't need Node installed.
+FROM node:20
+
+WORKDIR /app
+
+# Install dependencies first so this layer is cached unless package files change.
+COPY package.json package-lock.json ./
+RUN npm install
+
+EXPOSE 5173
+
+# --host makes Vite listen on all interfaces so it's reachable from the host.
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

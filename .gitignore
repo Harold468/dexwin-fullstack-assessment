@@ -1,0 +1,21 @@
+# Java / Maven
+backend/target/
+*.class
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+
+# Interviewer materials — never commit (shared privately)
+SOLUTIONS.md
+SOLUTIONS.pdf
+INTERVIEW_GUIDE.md
+INTERVIEW_GUIDE.pdf
